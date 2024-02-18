@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
@@ -12,6 +11,7 @@ class PixelAdventure extends FlameGame with HasKeyboardHandlerComponents, DragCa
   late final CameraComponent cam;
   final player = Player(character: 'Mask Dude');
   late final JoystickComponent joystick;
+  bool showJoystick = false;
   
   @override
   Color backgroundColor()=>const Color(0xFF211F30);
@@ -24,14 +24,15 @@ class PixelAdventure extends FlameGame with HasKeyboardHandlerComponents, DragCa
     cam = CameraComponent.withFixedResolution(width: 640, height: 360, world: world);
     cam.viewfinder.anchor = Anchor.topLeft;
     addAll([cam,world]);
-    addJoystick();
+
+    if(showJoystick) addJoystick();
     return super.onLoad();
   }
 
   @override
   void update(double dt) {
     super.update(dt);
-    updateJoystick();
+    //updateJoystick();
 
   }
 

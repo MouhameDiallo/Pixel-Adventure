@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flame/components.dart';
 import 'package:flutter/services.dart';
+import 'package:pixel_adventures/components/util.dart';
 import 'package:pixel_adventures/pixel_adventure.dart';
 
 import 'collison_block.dart';
@@ -18,7 +19,14 @@ class Player extends SpriteAnimationGroupComponent
   double moveSpeed = 100;
   double horizontalMovement = 0;
   Vector2 velocity = Vector2.zero();
+
+  final double _gravity = 9.8;
+  final double _jumpForce = 360;
+  final double _terminalVelocity = 300;
+  bool hasJumped = false;
   List<CollisionBlock> collisionBlocks = [];
+
+  bool isOnGround = false;
   Player({position, this.character = 'Mask Dude'}) : super(position: position);
 
   @override
@@ -33,6 +41,8 @@ class Player extends SpriteAnimationGroupComponent
     _updatePlayerState();
     _updatePlayerMovement(dt);
     _checkHorizontalCollisions();
+    _applyGravity(dt); // il est prefereable de faire gerer cela apres la detection de collision horizontale
+    _checkVerticalCollisions();
     super.update(dt);
   }
 
@@ -43,6 +53,7 @@ class Player extends SpriteAnimationGroupComponent
     final isRightKeyPressed= keysPressed.contains(LogicalKeyboardKey.keyD)||keysPressed.contains(LogicalKeyboardKey.arrowRight);
     horizontalMovement += isLeftKeyPressed? -1:0;
     horizontalMovement += isRightKeyPressed? 1:0;
+    hasJumped = keysPressed.contains(LogicalKeyboardKey.space);
     return super.onKeyEvent(event, keysPressed);
   }
 
@@ -73,10 +84,16 @@ class Player extends SpriteAnimationGroupComponent
   }
 
   void _updatePlayerMovement(double dt) {
-    //Driection dans le sens des abscisses
-
+    //Direction dans le sens des abscisses
+    if (hasJumped && isOnGround) _playerJump(dt);
     velocity.x = horizontalMovement * moveSpeed;
     position.x += velocity.x * dt;
+  }
+  void _playerJump(double dt) {
+    velocity.y = -_jumpForce;
+    position.y += velocity.y * dt;
+    hasJumped = false;
+    isOnGround = false;
   }
 
   void _updatePlayerState() {
@@ -92,5 +109,62 @@ class Player extends SpriteAnimationGroupComponent
     current = playerState;
   }
 
-  void _checkHorizontalCollisions() {}
+  void _checkHorizontalCollisions() {
+    for(var block in collisionBlocks){
+      if(!block.isPlatform){
+        if(checkCollision(this, block)){
+          if(velocity.x>0){
+            velocity.x = 0;
+            position.x = block.position.x - width;
+            break;
+          }
+          if(velocity.x<0){
+            velocity.x = 0;
+            position.x = block.x + block.width +width;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  void _applyGravity(double dt) {
+    velocity.y += _gravity;
+    velocity.y = velocity.y.clamp(-_jumpForce, _terminalVelocity);
+    position.y += velocity.y * dt;
+  }
+
+  void _checkVerticalCollisions() {
+    for(var block in collisionBlocks){
+      if(block.isPlatform){
+        // handle it
+        if(checkCollision(this, block)){
+          if(velocity.y > 0){
+            velocity.y = 0;
+            position.y = block.y - height;
+            isOnGround = true;
+            break;
+          }
+
+        }
+      }
+      else{
+        if(checkCollision(this, block)){
+          if(velocity.y > 0){
+            velocity.y = 0;
+            position.y = block.y - height;
+            isOnGround = true;
+            break;
+          }
+          if(velocity.y < 0){
+            velocity.y = 0;
+            position.y = block.y +block.height;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+
 }
