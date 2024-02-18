@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'package:pixel_adventures/actors/player.dart';
-import 'package:pixel_adventures/levels/level.dart';
+import 'package:pixel_adventures/components/player.dart';
+import 'package:pixel_adventures/components/level.dart';
 
 class PixelAdventure extends FlameGame with HasKeyboardHandlerComponents, DragCallbacks{
 

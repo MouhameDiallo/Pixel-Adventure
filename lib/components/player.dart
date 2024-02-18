@@ -3,6 +3,8 @@ import 'package:flame/components.dart';
 import 'package:flutter/services.dart';
 import 'package:pixel_adventures/pixel_adventure.dart';
 
+import 'collison_block.dart';
+
 
 enum PlayerState {idle, running}
 
@@ -16,8 +18,7 @@ class Player extends SpriteAnimationGroupComponent
   double moveSpeed = 100;
   double horizontalMovement = 0;
   Vector2 velocity = Vector2.zero();
-  bool isFacingRight = true;
-
+  List<CollisionBlock> collisionBlocks = [];
   Player({position, this.character = 'Mask Dude'}) : super(position: position);
 
   @override
@@ -31,6 +32,7 @@ class Player extends SpriteAnimationGroupComponent
   void update(double dt){
     _updatePlayerState();
     _updatePlayerMovement(dt);
+    _checkHorizontalCollisions();
     super.update(dt);
   }
 
@@ -89,4 +91,6 @@ class Player extends SpriteAnimationGroupComponent
     if(velocity.x>0 || velocity.x<0) playerState = PlayerState.running;
     current = playerState;
   }
+
+  void _checkHorizontalCollisions() {}
 }
