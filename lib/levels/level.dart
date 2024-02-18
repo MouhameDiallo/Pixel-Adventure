@@ -19,7 +19,6 @@ class Level extends World {
     for (final spawnPoint in spawnPointsLayer!.objects) {
       switch (spawnPoint.class_) {
         case 'Player':
-
           player.position = Vector2(spawnPoint.x, spawnPoint.y);
           add(player);
           break;
