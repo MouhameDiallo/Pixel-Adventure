@@ -1,4 +1,6 @@
-bool checkCollision(player, block){
+import 'package:pixel_adventures/components/collison_block.dart';
+
+bool checkCollision(player, CollisionBlock block){
   final playerX = player.position.x;
   final playerY = player.position.y;
   final playerWidth = player.width;
@@ -9,7 +11,7 @@ bool checkCollision(player, block){
   final blockWidth = block.width;
   final blockHeight = block.height;
 
-  final fixedX = player.scale.x<0?playerX - playerWidth: playerX;
+  final fixedX = player.scale.x<0? playerX - playerWidth: playerX;
   final fixedY = block.isPlatform? playerY + playerHeight: playerY;
 
   //Enfaite ici, on utilise && au lieu de || parce qu'une collision dans un axe

@@ -7,12 +7,14 @@ import 'package:pixel_adventures/pixel_adventure.dart';
 import 'collison_block.dart';
 
 
-enum PlayerState {idle, running}
+enum PlayerState {idle, running, jumping, falling}
 
 class Player extends SpriteAnimationGroupComponent
     with HasGameRef<PixelAdventure>, KeyboardHandler {
   late final SpriteAnimation idleAnimation;
   late final SpriteAnimation runningAnimation;
+  late final SpriteAnimation jumpingAnimation;
+  late final SpriteAnimation fallingAnimation;
   final double stepTime = 0.05;
   final String character;
 
@@ -21,7 +23,7 @@ class Player extends SpriteAnimationGroupComponent
   Vector2 velocity = Vector2.zero();
 
   final double _gravity = 9.8;
-  final double _jumpForce = 360;
+  final double _jumpForce = 300;
   final double _terminalVelocity = 300;
   bool hasJumped = false;
   List<CollisionBlock> collisionBlocks = [];
@@ -59,13 +61,16 @@ class Player extends SpriteAnimationGroupComponent
 
   void _loadAnimations() {
     idleAnimation = _spriteAnimation('Idle', 11);
-
     runningAnimation = _spriteAnimation('Run',12);
+    jumpingAnimation = _spriteAnimation('Jump',1);
+    fallingAnimation = _spriteAnimation('Fall',1);
 
     //Liste toutes les animations
     animations = {
       PlayerState.idle : idleAnimation,
       PlayerState.running : runningAnimation,
+      PlayerState.jumping : jumpingAnimation,
+      PlayerState.falling : fallingAnimation,
     };
 
     //Indique l'animation actuelle
@@ -106,6 +111,8 @@ class Player extends SpriteAnimationGroupComponent
     }
 
     if(velocity.x>0 || velocity.x<0) playerState = PlayerState.running;
+    if(velocity.y<0) playerState = PlayerState.jumping;
+    if(velocity.y>0) playerState = PlayerState.falling;
     current = playerState;
   }
 
@@ -137,7 +144,6 @@ class Player extends SpriteAnimationGroupComponent
   void _checkVerticalCollisions() {
     for(var block in collisionBlocks){
       if(block.isPlatform){
-        // handle it
         if(checkCollision(this, block)){
           if(velocity.y > 0){
             velocity.y = 0;
