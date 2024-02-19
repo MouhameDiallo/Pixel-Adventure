@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/services.dart';
+import 'package:pixel_adventures/components/player_hitbox.dart';
 import 'package:pixel_adventures/components/util.dart';
 import 'package:pixel_adventures/pixel_adventure.dart';
 
@@ -21,6 +23,7 @@ class Player extends SpriteAnimationGroupComponent
   double moveSpeed = 100;
   double horizontalMovement = 0;
   Vector2 velocity = Vector2.zero();
+  PlayerHitBox hitBox = PlayerHitBox(offsetX: 10, offsetY: 4, width: 14, height: 28);
 
   final double _gravity = 9.8;
   final double _jumpForce = 300;
@@ -34,7 +37,7 @@ class Player extends SpriteAnimationGroupComponent
   @override
   FutureOr<void> onLoad() {
     _loadAnimations();
-    // TODO: implement onLoad
+    add(RectangleHitbox(position: Vector2(hitBox.offsetX,hitBox.offsetY), size: Vector2(hitBox.width,hitBox.height)));
     return super.onLoad();
   }
 
@@ -94,6 +97,7 @@ class Player extends SpriteAnimationGroupComponent
     velocity.x = horizontalMovement * moveSpeed;
     position.x += velocity.x * dt;
   }
+
   void _playerJump(double dt) {
     velocity.y = -_jumpForce;
     position.y += velocity.y * dt;
@@ -122,12 +126,12 @@ class Player extends SpriteAnimationGroupComponent
         if(checkCollision(this, block)){
           if(velocity.x>0){
             velocity.x = 0;
-            position.x = block.position.x - width;
+            position.x = block.position.x - hitBox.width - hitBox.offsetX;
             break;
           }
           if(velocity.x<0){
             velocity.x = 0;
-            position.x = block.x + block.width +width;
+            position.x = block.x + block.width +hitBox.width + hitBox.offsetX;
             break;
           }
         }
@@ -147,24 +151,23 @@ class Player extends SpriteAnimationGroupComponent
         if(checkCollision(this, block)){
           if(velocity.y > 0){
             velocity.y = 0;
-            position.y = block.y - height;
+            position.y = block.y - hitBox.height - hitBox.offsetY;
             isOnGround = true;
             break;
           }
-
         }
       }
       else{
         if(checkCollision(this, block)){
           if(velocity.y > 0){
             velocity.y = 0;
-            position.y = block.y - height;
+            position.y = block.y - hitBox.height - hitBox.offsetY;
             isOnGround = true;
             break;
           }
           if(velocity.y < 0){
             velocity.y = 0;
-            position.y = block.y +block.height;
+            position.y = block.y +block.height - hitBox.offsetY;
             break;
           }
         }
