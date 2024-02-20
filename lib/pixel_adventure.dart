@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:pixel_adventures/components/player.dart';
 import 'package:pixel_adventures/components/level.dart';
 
-class PixelAdventure extends FlameGame with HasKeyboardHandlerComponents, DragCallbacks{
+class PixelAdventure extends FlameGame with HasKeyboardHandlerComponents, DragCallbacks, HasCollisionDetection{
 
   late final CameraComponent cam;
   final player = Player(character: 'Mask Dude');
