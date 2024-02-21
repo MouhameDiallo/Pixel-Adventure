@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/services.dart';
+import 'package:pixel_adventures/components/saw.dart';
 import 'package:pixel_adventures/components/util.dart';
 import 'package:pixel_adventures/pixel_adventure.dart';
 
@@ -10,7 +11,7 @@ import 'custom_hitbox.dart';
 import 'fruit.dart';
 
 
-enum PlayerState {idle, running, jumping, falling}
+enum PlayerState {idle, running, jumping, falling, hit, appearing}
 
 class Player extends SpriteAnimationGroupComponent
     with HasGameRef<PixelAdventure>, KeyboardHandler, CollisionCallbacks {
@@ -18,8 +19,11 @@ class Player extends SpriteAnimationGroupComponent
   late final SpriteAnimation runningAnimation;
   late final SpriteAnimation jumpingAnimation;
   late final SpriteAnimation fallingAnimation;
+  late final SpriteAnimation hitAnimation;
+  late final SpriteAnimation appearingAnimation;
   final double stepTime = 0.05;
   final String character;
+  bool gotHit = false;
 
   double moveSpeed = 100;
   double horizontalMovement = 0;
@@ -31,12 +35,14 @@ class Player extends SpriteAnimationGroupComponent
   final double _terminalVelocity = 300;
   bool hasJumped = false;
   List<CollisionBlock> collisionBlocks = [];
+  late Vector2 respawnPoint;
 
   bool isOnGround = false;
   Player({position, this.character = 'Mask Dude'}) : super(position: position);
 
   @override
   FutureOr<void> onLoad() {
+    respawnPoint = Vector2(position.x, position.y);
     _loadAnimations();
     add(RectangleHitbox(position: Vector2(hitBox.offsetX,hitBox.offsetY), size: Vector2(hitBox.width,hitBox.height)));
     return super.onLoad();
@@ -44,11 +50,13 @@ class Player extends SpriteAnimationGroupComponent
 
   @override
   void update(double dt){
-    _updatePlayerState();
-    _updatePlayerMovement(dt);
-    _checkHorizontalCollisions();
-    _applyGravity(dt); // il est prefereable de faire gerer cela apres la detection de collision horizontale
-    _checkVerticalCollisions();
+    if(!gotHit){
+      _updatePlayerState();
+      _updatePlayerMovement(dt);
+      _checkHorizontalCollisions();
+      _applyGravity(dt); // il est prefereable de faire gerer cela apres la detection de collision horizontale
+      _checkVerticalCollisions();
+    }
     super.update(dt);
   }
 
@@ -67,7 +75,11 @@ class Player extends SpriteAnimationGroupComponent
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     // TODO: implement onCollision
     super.onCollision(intersectionPoints, other);
-    if(other is Fruit) other.collidedWithPlayer();
+    if(other is Fruit) {
+      other.collidedWithPlayer();
+    } else if(other is Saw) {
+      _reSpawn();
+    }
   }
 
   void _loadAnimations() {
@@ -75,6 +87,8 @@ class Player extends SpriteAnimationGroupComponent
     runningAnimation = _spriteAnimation('Run',12);
     jumpingAnimation = _spriteAnimation('Jump',1);
     fallingAnimation = _spriteAnimation('Fall',1);
+    hitAnimation = _spriteAnimation('Hit',7);
+    appearingAnimation = _specialSpriteAnimation('Appearing',7);
 
     //Liste toutes les animations
     animations = {
@@ -82,6 +96,8 @@ class Player extends SpriteAnimationGroupComponent
       PlayerState.running : runningAnimation,
       PlayerState.jumping : jumpingAnimation,
       PlayerState.falling : fallingAnimation,
+      PlayerState.hit : hitAnimation,
+      PlayerState.appearing : appearingAnimation,
     };
 
     //Indique l'animation actuelle
@@ -95,6 +111,17 @@ class Player extends SpriteAnimationGroupComponent
         amount: amount,
         stepTime: stepTime, //temps entre les animations en fps. ici on 20 fps =>1s/20 = 0.05
         textureSize: Vector2.all(32),
+      ),
+    );
+  }
+
+  SpriteAnimation _specialSpriteAnimation(String state,int amount){
+    return SpriteAnimation.fromFrameData(
+      game.images.fromCache("Main Characters/$state (96x96).png"),
+      SpriteAnimationData.sequenced(
+        amount: amount,
+        stepTime: stepTime, //temps entre les animations en fps. ici on 20 fps =>1s/20 = 0.05
+        textureSize: Vector2.all(96),
       ),
     );
   }
@@ -181,6 +208,26 @@ class Player extends SpriteAnimationGroupComponent
         }
       }
     }
+  }
+
+  void _reSpawn() {
+    gotHit = true;
+    current  = PlayerState.hit;
+    Duration hitDuration = const Duration(milliseconds: 350);
+    Duration appearingDuration = const Duration(milliseconds: 350);
+    Duration canMoveDuration = const Duration(milliseconds: 350);
+    Future.delayed(hitDuration, (){
+      scale.x = 1;
+      position = respawnPoint - Vector2.all(32); // a cause de la taille de l'animation 96x96
+      current  = PlayerState.appearing;
+      Future.delayed(appearingDuration,(){
+        _updatePlayerState();
+        position = respawnPoint;
+        velocity = Vector2.zero();
+        Future.delayed(canMoveDuration,()=> gotHit = false);
+      });
+    });
+    //position = respawnPoint;
   }
 
 

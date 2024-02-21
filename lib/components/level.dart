@@ -7,9 +7,10 @@ import 'package:pixel_adventures/components/background_tile.dart';
 import 'package:pixel_adventures/components/collison_block.dart';
 import 'package:pixel_adventures/components/fruit.dart';
 import 'package:pixel_adventures/components/player.dart';
+import 'package:pixel_adventures/components/saw.dart';
 import 'package:pixel_adventures/pixel_adventure.dart';
 
-class Level extends World with HasGameRef<PixelAdventure>{
+class Level extends World with HasGameRef<PixelAdventure> {
   late TiledComponent level;
   final String levelName;
   final Player player;
@@ -29,28 +30,29 @@ class Level extends World with HasGameRef<PixelAdventure>{
 
   void _scrollingBackground() {
     final backgroundLayer = level.tileMap.getLayer('Background');
-    const tileSize =64;
+    const tileSize = 64;
     final numTileY = (gameRef.size.y / tileSize).floor();
     final numTileX = (gameRef.size.x / tileSize).floor();
-    if(backgroundLayer!=null){
-      final backgroundColor = backgroundLayer.properties.getValue('BackgroundColor');
+    if (backgroundLayer != null) {
+      final backgroundColor =
+          backgroundLayer.properties.getValue('BackgroundColor');
 
-      for(int y=0; y<gameRef.size.y /numTileY;y++){
-        for(int x=0; x<numTileX;x++) {
+      for (int y = 0; y < gameRef.size.y / numTileY; y++) {
+        for (int x = 0; x < numTileX; x++) {
           final backgroundTile = BackgroundTile(
             color: backgroundColor ?? 'Gray',
-            position: Vector2((x * tileSize - tileSize) as double, (y * tileSize - tileSize) as double),
+            position: Vector2((x * tileSize - tileSize) as double,
+                (y * tileSize - tileSize) as double),
           );
           add(backgroundTile);
         }
       }
-
     }
   }
 
   void _spawningObjects() {
     final spawnPointsLayer = level.tileMap.getLayer<ObjectGroup>('Spawnpoints');
-    if (spawnPointsLayer!=null){
+    if (spawnPointsLayer != null) {
       for (final spawnPoint in spawnPointsLayer.objects) {
         switch (spawnPoint.class_) {
           case 'Player':
@@ -58,8 +60,24 @@ class Level extends World with HasGameRef<PixelAdventure>{
             add(player);
             break;
           case 'Fruit':
-            Fruit fruit = Fruit(name: spawnPoint.name, position: Vector2(spawnPoint.x, spawnPoint.y), size: Vector2.all(32.0));
+            Fruit fruit = Fruit(
+                name: spawnPoint.name,
+                position: Vector2(spawnPoint.x, spawnPoint.y),
+                size: Vector2.all(32.0));
             add(fruit);
+            break;
+          case 'Saw':
+            final isVertical = spawnPoint.properties.getValue('isVertical');
+            final offNeg = spawnPoint.properties.getValue('offNeg');
+            final offPos = spawnPoint.properties.getValue('offPos');
+            Saw saw = Saw(
+              isVertical: isVertical,
+              offNeg: offNeg,
+              offPos: offPos,
+              position: Vector2(spawnPoint.x, spawnPoint.y),
+              size: Vector2.all(38.0),
+            );
+            add(saw);
             break;
           default:
         }
@@ -69,13 +87,13 @@ class Level extends World with HasGameRef<PixelAdventure>{
 
   void _addCollisions() {
     final collisionsLayer = level.tileMap.getLayer<ObjectGroup>('Collisions');
-    if (collisionsLayer!=null){
-      for(final collision in collisionsLayer.objects){
-        switch(collision.class_){
+    if (collisionsLayer != null) {
+      for (final collision in collisionsLayer.objects) {
+        switch (collision.class_) {
           case 'Platform':
             final platform = CollisionBlock(
               position: Vector2(collision.x, collision.y),
-              size: Vector2(collision.width,collision.height),
+              size: Vector2(collision.width, collision.height),
               isPlatform: true,
             );
             collisionBlocks.add(platform);
@@ -84,7 +102,7 @@ class Level extends World with HasGameRef<PixelAdventure>{
           default:
             final block = CollisionBlock(
               position: Vector2(collision.x, collision.y),
-              size: Vector2(collision.width,collision.height),
+              size: Vector2(collision.width, collision.height),
             );
             collisionBlocks.add(block);
             add(block);
