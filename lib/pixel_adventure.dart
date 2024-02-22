@@ -38,7 +38,7 @@ class PixelAdventure extends FlameGame
 
   void addJoystick() {
     joystick = JoystickComponent(
-      priority: 100,
+      priority: 10,
       knob: SpriteComponent(
         sprite: Sprite(
           images.fromCache('HUD/Knob.png'),
@@ -51,8 +51,8 @@ class PixelAdventure extends FlameGame
       ),
       margin: const EdgeInsets.only(left: 32.0, bottom: 32.0),
     );
+    Future.delayed(const Duration(seconds: 3),(){add(joystick);});
 
-    add(joystick);
   }
 
   void updateJoystick() {

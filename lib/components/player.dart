@@ -41,6 +41,8 @@ class Player extends SpriteAnimationGroupComponent
   
   List<CollisionBlock> collisionBlocks = [];
   late Vector2 respawnPoint;
+  final double fixedDeltaTime = 1/60;
+  double accumulatedTime = 0;
 
   
   Player({position, this.character = 'Mask Dude'}) : super(position: position);
@@ -55,13 +57,19 @@ class Player extends SpriteAnimationGroupComponent
 
   @override
   void update(double dt){
-    if(!gotHit && !hasReachedCheckpoint) {
-      _updatePlayerState();
-      _updatePlayerMovement(dt);
-      _checkHorizontalCollisions();
-      _applyGravity(dt); // il est prefereable de faire gerer cela apres la detection de collision horizontale
-      _checkVerticalCollisions();
+    accumulatedTime+=dt;
+    while (accumulatedTime >= fixedDeltaTime){
+      if(!gotHit && !hasReachedCheckpoint) {
+        _updatePlayerState();
+        _updatePlayerMovement(fixedDeltaTime);
+        _checkHorizontalCollisions();
+        _applyGravity(fixedDeltaTime); // il est preferable de faire gerer cela apres la detection de collision horizontale
+        _checkVerticalCollisions();
+      }
+      accumulatedTime-= fixedDeltaTime;
     }
+
+
     super.update(dt);
   }
 
@@ -239,7 +247,6 @@ class Player extends SpriteAnimationGroupComponent
         Future.delayed(canMoveDuration,()=> gotHit = false);
       });
     });
-    //position = respawnPoint;
   }
 
   void _reachedCheckpoint() {
