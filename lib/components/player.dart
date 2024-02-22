@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/services.dart';
+import 'package:pixel_adventures/components/checkpoint.dart';
 import 'package:pixel_adventures/components/saw.dart';
 import 'package:pixel_adventures/components/util.dart';
 import 'package:pixel_adventures/pixel_adventure.dart';
@@ -11,7 +12,7 @@ import 'custom_hitbox.dart';
 import 'fruit.dart';
 
 
-enum PlayerState {idle, running, jumping, falling, hit, appearing}
+enum PlayerState {idle, running, jumping, falling, hit, appearing,disappearing}
 
 class Player extends SpriteAnimationGroupComponent
     with HasGameRef<PixelAdventure>, KeyboardHandler, CollisionCallbacks {
@@ -21,9 +22,13 @@ class Player extends SpriteAnimationGroupComponent
   late final SpriteAnimation fallingAnimation;
   late final SpriteAnimation hitAnimation;
   late final SpriteAnimation appearingAnimation;
+  late final SpriteAnimation disappearingAnimation;
   final double stepTime = 0.05;
   final String character;
+  bool isOnGround = false;
+  bool hasJumped = false;
   bool gotHit = false;
+  bool hasReachedCheckpoint = false;
 
   double moveSpeed = 100;
   double horizontalMovement = 0;
@@ -33,11 +38,11 @@ class Player extends SpriteAnimationGroupComponent
   final double _gravity = 9.8;
   final double _jumpForce = 200;
   final double _terminalVelocity = 300;
-  bool hasJumped = false;
+  
   List<CollisionBlock> collisionBlocks = [];
   late Vector2 respawnPoint;
 
-  bool isOnGround = false;
+  
   Player({position, this.character = 'Mask Dude'}) : super(position: position);
 
   @override
@@ -50,7 +55,7 @@ class Player extends SpriteAnimationGroupComponent
 
   @override
   void update(double dt){
-    if(!gotHit){
+    if(!gotHit && !hasReachedCheckpoint) {
       _updatePlayerState();
       _updatePlayerMovement(dt);
       _checkHorizontalCollisions();
@@ -75,11 +80,16 @@ class Player extends SpriteAnimationGroupComponent
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     // TODO: implement onCollision
     super.onCollision(intersectionPoints, other);
-    if(other is Fruit) {
-      other.collidedWithPlayer();
-    } else if(other is Saw) {
-      _reSpawn();
-    }
+   if(!hasReachedCheckpoint){
+     if(other is Fruit) {
+       other.collidedWithPlayer();
+     } else if(other is Saw) {
+       _reSpawn();
+     }
+     else if(other is Checkpoint){
+       _reachedCheckpoint();
+     }
+   }
   }
 
   void _loadAnimations() {
@@ -89,6 +99,7 @@ class Player extends SpriteAnimationGroupComponent
     fallingAnimation = _spriteAnimation('Fall',1);
     hitAnimation = _spriteAnimation('Hit',7);
     appearingAnimation = _specialSpriteAnimation('Appearing',7);
+    disappearingAnimation = _specialSpriteAnimation('Desappearing',7);
 
     //Liste toutes les animations
     animations = {
@@ -98,6 +109,7 @@ class Player extends SpriteAnimationGroupComponent
       PlayerState.falling : fallingAnimation,
       PlayerState.hit : hitAnimation,
       PlayerState.appearing : appearingAnimation,
+      PlayerState.disappearing : disappearingAnimation,
     };
 
     //Indique l'animation actuelle
@@ -228,6 +240,28 @@ class Player extends SpriteAnimationGroupComponent
       });
     });
     //position = respawnPoint;
+  }
+
+  void _reachedCheckpoint() {
+    hasReachedCheckpoint = true;
+    if(scale.x>0){
+      position -= Vector2(32, 32);
+    }
+    else if(scale.x<0){
+      position += Vector2(32, -32);
+    }
+    current = PlayerState.disappearing;
+    const checkPointDuration = Duration(milliseconds: 350); //7*50
+    Future.delayed(checkPointDuration, (){
+      hasReachedCheckpoint = false;
+      position = Vector2.all(-1000);//move it out screen bounds
+
+      const waitToSwitchLevel = Duration(seconds: 3);
+      Future.delayed(waitToSwitchLevel,(){
+        //switch level
+        game.loadNextLevel();
+      });
+    });
   }
 
 
