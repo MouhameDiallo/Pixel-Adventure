@@ -36,7 +36,7 @@ class Player extends SpriteAnimationGroupComponent
   CustomHitBox hitBox = CustomHitBox(offsetX: 10, offsetY: 4, width: 14, height: 28);
 
   final double _gravity = 9.8;
-  final double _jumpForce = 200;
+  final double _jumpForce = 250;
   final double _terminalVelocity = 300;
   
   List<CollisionBlock> collisionBlocks = [];
