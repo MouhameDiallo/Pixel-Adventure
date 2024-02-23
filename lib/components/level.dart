@@ -4,7 +4,7 @@ import 'package:flame/components.dart';
 import 'package:flame_tiled/flame_tiled.dart';
 import 'package:pixel_adventures/components/background_tile.dart';
 import 'package:pixel_adventures/components/checkpoint.dart';
-import 'package:pixel_adventures/components/collison_block.dart';
+import 'package:pixel_adventures/components/collision_block.dart';
 import 'package:pixel_adventures/components/fruit.dart';
 import 'package:pixel_adventures/components/player.dart';
 import 'package:pixel_adventures/components/saw.dart';
@@ -50,6 +50,7 @@ class Level extends World with HasGameRef<PixelAdventure> {
         switch (spawnPoint.class_) {
           case 'Player':
             player.position = Vector2(spawnPoint.x, spawnPoint.y);
+            player.scale.x = 1;
             add(player);
             break;
           case 'Fruit':

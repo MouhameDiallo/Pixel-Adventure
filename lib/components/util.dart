@@ -1,4 +1,4 @@
-import 'package:pixel_adventures/components/collison_block.dart';
+import 'package:pixel_adventures/components/collision_block.dart';
 
 bool checkCollision(player, CollisionBlock block){
   final hitBox = player.hitBox;

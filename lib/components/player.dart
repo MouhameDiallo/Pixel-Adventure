@@ -7,7 +7,7 @@ import 'package:pixel_adventures/components/saw.dart';
 import 'package:pixel_adventures/components/util.dart';
 import 'package:pixel_adventures/pixel_adventure.dart';
 
-import 'collison_block.dart';
+import 'collision_block.dart';
 import 'custom_hitbox.dart';
 import 'fruit.dart';
 
@@ -84,20 +84,22 @@ class Player extends SpriteAnimationGroupComponent
     return super.onKeyEvent(event, keysPressed);
   }
 
+
+  // meme chose que onCollision a la difference que onCollisionStart
+  // ne se declenche qu'a la premiere collision, donc meilleure performance
   @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    // TODO: implement onCollision
-    super.onCollision(intersectionPoints, other);
-   if(!hasReachedCheckpoint){
-     if(other is Fruit) {
-       other.collidedWithPlayer();
-     } else if(other is Saw) {
-       _reSpawn();
-     }
-     else if(other is Checkpoint){
-       _reachedCheckpoint();
-     }
-   }
+  void onCollisionStart(Set<Vector2> intersectionPoints, PositionComponent other) {
+    if(!hasReachedCheckpoint){
+      if(other is Fruit) {
+        other.collidedWithPlayer();
+      } else if(other is Saw) {
+        _reSpawn();
+      }
+      else if(other is Checkpoint){
+        _reachedCheckpoint();
+      }
+    }
+    super.onCollisionStart(intersectionPoints, other);
   }
 
   void _loadAnimations() {
@@ -105,7 +107,7 @@ class Player extends SpriteAnimationGroupComponent
     runningAnimation = _spriteAnimation('Run',12);
     jumpingAnimation = _spriteAnimation('Jump',1);
     fallingAnimation = _spriteAnimation('Fall',1);
-    hitAnimation = _spriteAnimation('Hit',7);
+    hitAnimation = _spriteAnimation('Hit',7)..loop=false;
     appearingAnimation = _specialSpriteAnimation('Appearing',7);
     disappearingAnimation = _specialSpriteAnimation('Desappearing',7);
 
@@ -142,6 +144,7 @@ class Player extends SpriteAnimationGroupComponent
         amount: amount,
         stepTime: stepTime, //temps entre les animations en fps. ici on 20 fps =>1s/20 = 0.05
         textureSize: Vector2.all(96),
+        loop: false,
       ),
     );
   }
@@ -230,23 +233,34 @@ class Player extends SpriteAnimationGroupComponent
     }
   }
 
-  void _reSpawn() {
+  void _reSpawn() async{
     gotHit = true;
     current  = PlayerState.hit;
-    Duration hitDuration = const Duration(milliseconds: 350);
-    Duration appearingDuration = const Duration(milliseconds: 350);
     Duration canMoveDuration = const Duration(milliseconds: 350);
-    Future.delayed(hitDuration, (){
-      scale.x = 1;
-      position = respawnPoint - Vector2.all(32); // a cause de la taille de l'animation 96x96
-      current  = PlayerState.appearing;
-      Future.delayed(appearingDuration,(){
-        _updatePlayerState();
-        position = respawnPoint;
-        velocity = Vector2.zero();
-        Future.delayed(canMoveDuration,()=> gotHit = false);
-      });
-    });
+
+    await animationTicker?.completed;// attention aux animations qui font un loop
+    animationTicker?.reset();
+    scale.x = 1;
+    position = respawnPoint - Vector2.all(32); // a cause de la taille de l'animation 96x96
+    current  = PlayerState.appearing;
+
+    await animationTicker?.completed;//on peut tjr faire un Future.delayed
+    animationTicker?.reset();
+    _updatePlayerState();
+    position = respawnPoint;
+    velocity = Vector2.zero();
+    Future.delayed(canMoveDuration,()=> gotHit = false);
+    // Future.delayed(hitDuration, (){
+    //   scale.x = 1;
+    //   position = respawnPoint - Vector2.all(32); // a cause de la taille de l'animation 96x96
+    //   current  = PlayerState.appearing;
+    //   Future.delayed(appearingDuration,(){
+    //     _updatePlayerState();
+    //     position = respawnPoint;
+    //     velocity = Vector2.zero();
+    //     Future.delayed(canMoveDuration,()=> gotHit = false);
+    //   });
+    // });
   }
 
   void _reachedCheckpoint() {
