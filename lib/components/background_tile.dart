@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flame/components.dart';
 import 'package:flame/parallax.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:pixel_adventures/pixel_adventure.dart';
 
 class BackgroundTile extends ParallaxComponent{
   final String color;

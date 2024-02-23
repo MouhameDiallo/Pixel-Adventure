@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/services.dart';
 import 'package:pixel_adventures/components/checkpoint.dart';
 import 'package:pixel_adventures/components/saw.dart';
@@ -157,6 +158,7 @@ class Player extends SpriteAnimationGroupComponent
   }
 
   void _playerJump(double dt) {
+    if(game.playSounds) FlameAudio.play('jump.wav',volume: game.soundVolume);
     velocity.y = -_jumpForce;
     position.y += velocity.y * dt;
     hasJumped = false;
@@ -234,6 +236,7 @@ class Player extends SpriteAnimationGroupComponent
   }
 
   void _reSpawn() async{
+    if(game.playSounds) FlameAudio.play('hit.wav',volume: game.soundVolume);
     gotHit = true;
     current  = PlayerState.hit;
     Duration canMoveDuration = const Duration(milliseconds: 350);
@@ -263,7 +266,8 @@ class Player extends SpriteAnimationGroupComponent
     // });
   }
 
-  void _reachedCheckpoint() {
+  void _reachedCheckpoint() async {
+    if(game.playSounds) FlameAudio.play('disappear.wav',volume: game.soundVolume);
     hasReachedCheckpoint = true;
     if(scale.x>0){
       position -= Vector2(32, 32);
@@ -272,16 +276,15 @@ class Player extends SpriteAnimationGroupComponent
       position += Vector2(32, -32);
     }
     current = PlayerState.disappearing;
-    const checkPointDuration = Duration(milliseconds: 350); //7*50
-    Future.delayed(checkPointDuration, (){
-      hasReachedCheckpoint = false;
-      position = Vector2.all(-1000);//move it out screen bounds
+    await animationTicker?.completed;
+    animationTicker?.reset();
 
-      const waitToSwitchLevel = Duration(seconds: 3);
-      Future.delayed(waitToSwitchLevel,(){
-        //switch level
-        game.loadNextLevel();
-      });
+    hasReachedCheckpoint = false;
+    position = Vector2.all(-1000);//move it out screen bounds
+
+    const waitToSwitchLevel = Duration(seconds: 3);
+    Future.delayed(waitToSwitchLevel,(){
+      game.loadNextLevel();
     });
   }
 

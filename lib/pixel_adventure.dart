@@ -15,6 +15,8 @@ class PixelAdventure extends FlameGame
   bool showControls = true;
   List<String> levelNames = ['Level-02', 'Level-02'];
   int currentLevel = 0;
+  double soundVolume = 1.0;
+  bool playSounds = true;
 
   @override
   Color backgroundColor() => const Color(0xFF211F30);
@@ -78,6 +80,8 @@ class PixelAdventure extends FlameGame
       _loadLevel();
     } else {
       //no more levels
+      currentLevel = 0;
+      _loadLevel();
     }
   }
 
