@@ -2,14 +2,12 @@ import 'dart:async';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:pixel_adventures/components/player.dart';
 import 'package:pixel_adventures/pixel_adventure.dart';
 
 class Saw extends SpriteAnimationComponent with HasGameRef<PixelAdventure>, CollisionCallbacks {
   final bool isVertical;
   final double offNeg;
   final double offPos;
-
 
   Saw(
       {this.isVertical = false,

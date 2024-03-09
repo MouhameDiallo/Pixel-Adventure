@@ -6,6 +6,7 @@ import 'package:pixel_adventures/components/background_tile.dart';
 import 'package:pixel_adventures/components/checkpoint.dart';
 import 'package:pixel_adventures/components/chicken.dart';
 import 'package:pixel_adventures/components/collision_block.dart';
+import 'package:pixel_adventures/components/enemies/fat_bird.dart';
 import 'package:pixel_adventures/components/fruit.dart';
 import 'package:pixel_adventures/components/player.dart';
 import 'package:pixel_adventures/components/saw.dart';
@@ -40,7 +41,6 @@ class Level extends World with HasGameRef<PixelAdventure> {
         position: Vector2(0, 0),
       );
       add(backgroundTile);
-
     }
   }
 
@@ -75,7 +75,10 @@ class Level extends World with HasGameRef<PixelAdventure> {
             add(saw);
             break;
           case 'Checkpoint':
-            Checkpoint checkpoint = Checkpoint(position: Vector2(spawnPoint.x, spawnPoint.y),size: Vector2.all(64.0),);
+            Checkpoint checkpoint = Checkpoint(
+              position: Vector2(spawnPoint.x, spawnPoint.y),
+              size: Vector2.all(64.0),
+            );
             add(checkpoint);
             break;
           case 'Chicken':
@@ -85,9 +88,22 @@ class Level extends World with HasGameRef<PixelAdventure> {
               offNeg: offNeg,
               offPos: offPos,
               position: Vector2(spawnPoint.x, spawnPoint.y),
-              size: Vector2(spawnPoint.width,spawnPoint.height),
+              size: Vector2(spawnPoint.width, spawnPoint.height),
             );
             add(chicken);
+            break;
+          case 'FatBird':
+            final offNeg = spawnPoint.properties.getValue('offNeg');
+            final offPos = spawnPoint.properties.getValue('offPos');
+
+            FatBird fatBird = FatBird(
+              offNeg: offNeg,
+              offPos: offPos,
+              position: Vector2(spawnPoint.x, spawnPoint.y),
+              size: Vector2(spawnPoint.width, spawnPoint.height),
+            );
+
+            add(fatBird);
             break;
           default:
         }

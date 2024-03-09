@@ -22,7 +22,7 @@ class Chicken extends SpriteAnimationGroupComponent with HasGameRef<PixelAdventu
   late final double rangeNeg;
   late final double rangePos;
 
-  final double runSpeed = 80;
+  final double runSpeed = 120;
   int targetDirection = -1;
   double moveDirection = 1;
   Vector2 velocity = Vector2.zero();
@@ -86,6 +86,9 @@ class Chicken extends SpriteAnimationGroupComponent with HasGameRef<PixelAdventu
     if(playerInRange() ){
       targetDirection = (player.x+playerOffset<position.x + chickenOffset)? -1:1;
       velocity.x = targetDirection * runSpeed;
+    }
+    if(player.x >=rangePos || player.x <=rangeNeg){
+      velocity.x=0;
     }
     moveDirection = lerpDouble(moveDirection, targetDirection, 0.1)??1;
     position.x += velocity.x * dt ;
