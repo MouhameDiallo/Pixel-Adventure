@@ -3,17 +3,23 @@ import 'dart:async';
 import 'package:flame/components.dart';
 import 'package:pixel_adventures/pixel_adventure.dart';
 
+import '../player.dart';
+
 enum BirdState {idle, ground, fall, hit}
+
 class FatBird extends SpriteAnimationGroupComponent with HasGameRef<PixelAdventure>{
   late final SpriteAnimation idleAnimation;
   late final SpriteAnimation fallAnimation;
   late final SpriteAnimation groundAnimation;
   late final SpriteAnimation hitAnimation;
+  late final Player player;
 
   final double offNeg;
   final double offPos;
+  final double fallLimit;
   late final double rangeNeg;
   late final double rangePos;
+  late final double rangeLimit;
 
   Vector2 velocity = Vector2.zero();
   int sens = -1;
@@ -22,10 +28,11 @@ class FatBird extends SpriteAnimationGroupComponent with HasGameRef<PixelAdventu
   static const double stepTime = 0.05;
   static const int tileSize = 16;
 
-  FatBird({super.position, super.size, this.offNeg=0, this.offPos =0});
+  FatBird({super.position, super.size, this.offNeg=0, this.offPos =0, this.fallLimit=0});
 
   @override
   FutureOr<void> onLoad() {
+    player = game.player;
     _loadAllAnimations();
     _calculateActionRange();
     debugMode = true;
@@ -34,8 +41,7 @@ class FatBird extends SpriteAnimationGroupComponent with HasGameRef<PixelAdventu
 
   @override
   void update(double dt) {
-    _moveBird(dt);
-    _updateState();
+    _updateState(dt);
     super.update(dt);
   }
 
@@ -68,16 +74,43 @@ class FatBird extends SpriteAnimationGroupComponent with HasGameRef<PixelAdventu
   void _calculateActionRange() {
     rangeNeg = position.y - offNeg * tileSize;
     rangePos = position.y +height + offNeg * tileSize;
+    rangeLimit = position.y + height + fallLimit * tileSize;
   }
 
-  void _moveBird(double dt) {
+  void _birdIdleMovement(double dt) {
     if(position.y<rangeNeg) sens =1;
     if(position.y + height>= rangePos) sens =-1;
     velocity.y = sens * moveSpeed;
     position.y+= velocity.y*dt;
+    current = BirdState.idle;
   }
 
-  void _updateState() {
+  void _fallBird(double dt){
+    moveSpeed = 100;
+    if(position.y + height>= rangeLimit) moveSpeed=0;
+    sens =1;
+    velocity.y = sens * moveSpeed;
+    position.y+= velocity.y*dt;
+    current = BirdState.fall;
 
+  }
+
+  void _updateState(double dt) {
+    if(_playerInRange()){
+      print('Player in range: ......');
+      _fallBird(dt);
+    }else{
+      moveSpeed = 14;
+      _birdIdleMovement(dt);
+    }
+  }
+
+  bool _playerInRange(){
+    double playerOffset = player.scale.x> 0? 0 : -player.width;
+    if(player.x+playerOffset >= position.x && (player.x + player.width + playerOffset)<=(position.x + width))
+      {
+        return true;
+      }
+    return false;
   }
 }

@@ -95,10 +95,12 @@ class Level extends World with HasGameRef<PixelAdventure> {
           case 'FatBird':
             final offNeg = spawnPoint.properties.getValue('offNeg');
             final offPos = spawnPoint.properties.getValue('offPos');
+            final fallLimit = spawnPoint.properties.getValue('fallLimit');
 
             FatBird fatBird = FatBird(
               offNeg: offNeg,
               offPos: offPos,
+              fallLimit: fallLimit,
               position: Vector2(spawnPoint.x, spawnPoint.y),
               size: Vector2(spawnPoint.width, spawnPoint.height),
             );
